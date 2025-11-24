@@ -1,0 +1,69 @@
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: notetaker-api
+    runtime: python
+    region: oregon
+    plan: starter  # $7/month
+    buildCommand: "cd backend && pip install uv && uv sync"
+    startCommand: "cd backend && uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      # Database connection (auto-filled by Render from database below)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: notetaker-db
+          property: connectionString
+
+      # Supabase Auth (Add these manually in Render Dashboard)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+
+      # AI API Keys (Add these manually in Render Dashboard)
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+
+      # Model Configuration
+      - key: TRANSCRIPTION_MODEL
+        value: whisper-1
+      - key: TRANSCRIPTION_FALLBACK_MODEL
+        value: gpt-4o-mini-transcribe
+      - key: NOTES_MODEL
+        value: openrouter/google/gemini-2.5-flash
+      - key: MAX_CONCURRENT_TRANSCRIPTIONS
+        value: 4
+      - key: CHUNK_THRESHOLD_MB
+        value: 4
+
+      # File Storage
+      - key: UPLOAD_DIR
+        value: /opt/render/project/uploads
+      - key: MAX_FILE_SIZE_MB
+        value: 500
+      - key: ALLOWED_VIDEO_FORMATS
+        value: mp4,avi,mov,mkv
+
+      # YouTube Settings
+      - key: YOUTUBE_DOWNLOAD_FORMAT
+        value: mp4
+      - key: YOUTUBE_MAX_DURATION_MINUTES
+        value: 0
+
+    # Health check endpoint
+    healthCheckPath: /health
+
+    # Auto-deploy from main branch
+    autoDeploy: true
+
+databases:
+  # PostgreSQL Database
+  - name: notetaker-db
+    databaseName: notetaker
+    user: notetaker
+    plan: starter  # $7/month - 256MB RAM, 1GB storage
+    region: oregon
