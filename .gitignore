@@ -33,3 +33,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Video samples
+backend/samples/
+backend/*.mp4
+*.mp4
