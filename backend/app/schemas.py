@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_serializer, field_validator
+from pydantic import BaseModel, field_serializer, field_validator, Field
 from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
@@ -32,20 +32,21 @@ class VideoUpdateRequest(BaseModel):
 
 class YouTubeSubmitRequest(BaseModel):
     """Request schema for submitting a YouTube video for processing."""
+
     url: str
 
-    @field_validator('url')
+    @field_validator("url")
     @classmethod
     def validate_url(cls, v: str) -> str:
         """Validate that URL looks like a YouTube URL or video ID."""
         import re
 
         # Allow raw video ID (11 characters)
-        if re.match(r'^[a-zA-Z0-9_-]{11}$', v):
+        if re.match(r"^[a-zA-Z0-9_-]{11}$", v):
             return v
 
         # Allow YouTube URLs
-        if 'youtube.com' in v or 'youtu.be' in v:
+        if "youtube.com" in v or "youtu.be" in v:
             return v
 
         raise ValueError(
@@ -56,6 +57,7 @@ class YouTubeSubmitRequest(BaseModel):
 
 class YouTubeSubmitResponse(BaseModel):
     """Response schema after submitting a YouTube video."""
+
     id: UUID
     youtube_url: str
     title: Optional[str] = None
@@ -69,6 +71,7 @@ class YouTubeSubmitResponse(BaseModel):
 
 class TranscriptSegment(BaseModel):
     """Timestamped segment from Whisper API."""
+
     start: float
     end: float
     text: str
@@ -87,14 +90,14 @@ class TranscriptionResponse(BaseModel):
     transcript_segments: Optional[list[TranscriptSegment]] = None
 
     # Note generation fields - full JSONB with metadata
-    notes: Optional['NotesData'] = None
+    notes: Optional["NotesData"] = None
     notes_model_used: Optional[str] = None
     notes_processing_time: Optional[str] = None
 
     class Config:
         from_attributes = True
 
-    @field_serializer('processing_time')
+    @field_serializer("processing_time")
     def serialize_processing_time(self, value: Optional[timedelta]) -> Optional[str]:
         """Convert timedelta to readable string format (e.g., '2m 30s')."""
         if value is None:
@@ -111,11 +114,11 @@ class TranscriptionResponse(BaseModel):
         if self.notes:
             # Handle both dict and NotesData object
             if isinstance(self.notes, dict):
-                self.notes_model_used = self.notes.get('model_used')
-                processing_time_ms = self.notes.get('processing_time_ms')
+                self.notes_model_used = self.notes.get("model_used")
+                processing_time_ms = self.notes.get("processing_time_ms")
             else:
-                self.notes_model_used = getattr(self.notes, 'model_used', None)
-                processing_time_ms = getattr(self.notes, 'processing_time_ms', None)
+                self.notes_model_used = getattr(self.notes, "model_used", None)
+                processing_time_ms = getattr(self.notes, "processing_time_ms", None)
 
             if processing_time_ms:
                 seconds = processing_time_ms // 1000
@@ -146,12 +149,14 @@ class VideoListResponse(BaseModel):
 
 class TimestampedItem(BaseModel):
     """Content item with optional timestamp reference."""
+
     content: str
     timestamp_seconds: Optional[float] = None
 
 
 class ChapterItem(BaseModel):
     """Semantic chapter/segment of the transcript."""
+
     title: str
     start_seconds: float
     end_seconds: float
@@ -160,6 +165,7 @@ class ChapterItem(BaseModel):
 
 class SentimentTimelineItem(BaseModel):
     """Sentiment analysis at a specific point in the transcript."""
+
     timestamp_seconds: int
     sentiment: str  # 'positive', 'negative', 'neutral'
     intensity: int  # -100 to +100
@@ -168,36 +174,49 @@ class SentimentTimelineItem(BaseModel):
 
 class ThemeItem(BaseModel):
     """Recurring theme with frequency information."""
-    theme: str
-    frequency: int
-    key_moments: Optional[list[str]] = None
+
+    theme: str = Field(description="Theme name")
+    frequency: int = Field(description="How many times discussed")
+    key_moments: Optional[list[str]] = Field(
+        description="Optional specific quotes or examples"
+    )
 
 
 class GeneratedNote(BaseModel):
     """Structured notes generated from transcript (content only)."""
-    summary: str
-    key_points: list[TimestampedItem]
-    detailed_notes: str
-    takeaways: list[TimestampedItem]
-    tags: list[str]
+
+    title: str = Field(description="Title of the video")
+    summary: str = Field(description="Executive summary (2-3 sentences)")
+    key_points: list[TimestampedItem] = Field(
+        description="Main points with timestamp references (list of objects with 'content' and 'timestamp_seconds')"
+    )
+    detailed_notes: str = Field(description="Important details and context")
+    takeaways: list[TimestampedItem] = Field(description="Important insights")
+    tags: list[str] = Field(description="Tags for the video")
     quotes: Optional[list[TimestampedItem]] = None
-    questions: Optional[list[str]] = None
-    participants: Optional[list[str]] = None
+    questions: Optional[list[str]] = Field(
+        description="Questions asked during the video"
+    )
+    participants: Optional[list[str]] = Field(description="Participants in the video")
     sentiment_timeline: Optional[list[SentimentTimelineItem]] = None
-    themes: Optional[list[ThemeItem]] = None
-    actionable_insights: Optional[list[str]] = None
+    themes: Optional[list[ThemeItem]] = Field(
+        description="Recurring themes with frequency information"
+    )
+    actionable_insights: Optional[list[str]] = Field(description="Actionable insights")
     chapters: Optional[list[ChapterItem]] = None
 
 
 class NotesData(GeneratedNote):
     """Notes with metadata - stored in JSONB field."""
-    model_used: str
-    processing_time_ms: int
-    generated_at: str
+
+    model_used: str = Field(description="Model used for note generation")
+    processing_time_ms: int = Field(description="Processing time in milliseconds")
+    generated_at: str = Field(description="Date and time of note generation")
 
 
 class VideoStreamResponse(BaseModel):
     """Response schema for video streaming endpoint."""
+
     status: str  # "ready" | "generating" | "failed"
     source_type: str  # "youtube" | "upload"
     hls_url: Optional[str] = None  # Presigned URL if ready (upload videos)
@@ -212,6 +231,7 @@ class VideoStreamResponse(BaseModel):
 
 class VideoDeleteResponse(BaseModel):
     """Response schema for video deletion."""
+
     id: UUID
     deleted: bool
     message: str
@@ -222,25 +242,26 @@ class VideoDeleteResponse(BaseModel):
 
 class PresignedUploadRequest(BaseModel):
     """Request schema for generating presigned upload URL."""
+
     filename: str
     file_size: int
     content_type: str = "video/mp4"
 
-    @field_validator('filename')
+    @field_validator("filename")
     @classmethod
     def validate_filename(cls, v: str) -> str:
         """Validate filename has allowed extension."""
         from app.config import settings
         import os
 
-        ext = os.path.splitext(v)[1].lower().lstrip('.')
+        ext = os.path.splitext(v)[1].lower().lstrip(".")
         if ext not in settings.allowed_formats_list:
             raise ValueError(
                 f"Invalid file extension '{ext}'. Allowed formats: {', '.join(settings.allowed_formats_list)}"
             )
         return v
 
-    @field_validator('file_size')
+    @field_validator("file_size")
     @classmethod
     def validate_file_size(cls, v: int) -> int:
         """Validate file size is within limits."""
@@ -258,6 +279,7 @@ class PresignedUploadRequest(BaseModel):
 
 class PresignedUploadResponse(BaseModel):
     """Response schema with presigned upload URL."""
+
     video_id: UUID
     upload_url: str
     r2_key: str
@@ -267,4 +289,5 @@ class PresignedUploadResponse(BaseModel):
 
 class UploadCompleteRequest(BaseModel):
     """Request schema for notifying upload completion."""
+
     success: bool

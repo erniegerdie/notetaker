@@ -64,6 +64,7 @@ For key_points, takeaways, and quotes, set timestamp_seconds to null.
 {timestamp_instruction}
 
 Extract and organize the following information:
+- Title: Concise, descriptive title for the video (5-10 words max)
 - Summary: Executive summary (2-3 sentences)
 - Key Points: Main points with timestamp references (list of objects with 'content' and 'timestamp_seconds')
 - Detailed Notes: Important details and context
