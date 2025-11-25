@@ -100,7 +100,8 @@ GCP_PROJECT_ID=gcp-project-id:latest,\
 GCP_REGION=gcp-region:latest,\
 CLOUD_TASKS_QUEUE=cloud-tasks-queue:latest,\
 WORKER_SERVICE_URL=worker-service-url:latest,\
-CLOUD_TASKS_SERVICE_ACCOUNT=cloud-tasks-service-account:latest"
+CLOUD_TASKS_SERVICE_ACCOUNT=cloud-tasks-service-account:latest" \
+		--set-env-vars "CORS_ORIGINS=https://notetaker-taupe-one.vercel.app"
 	@echo "$(GREEN)✓ API service deployed$(NC)"
 
 .PHONY: deploy-worker
@@ -118,7 +119,7 @@ deploy-worker: ## Deploy worker service to Cloud Run
 		--cpu-boost \
 		--add-cloudsql-instances $(PROJECT_ID):$(REGION):$(SQL_INSTANCE_NAME) \
 		--set-secrets "\
-DATABASE_URL=database-url:latest,\
+DATABASE_URL=database-url:5,\
 OPENAI_API_KEY=openai-api-key:latest,\
 OPENROUTER_API_KEY=openrouter-api-key:latest,\
 R2_ENDPOINT_URL=r2-endpoint-url:latest,\
