@@ -355,7 +355,16 @@ async def get_transcription(
     transcription = result.scalar_one_or_none()
 
     if not transcription:
-        if video.status in [VideoStatus.uploading, VideoStatus.uploaded, VideoStatus.processing]:
+        # Check if video is still being processed (any processing state)
+        processing_states = [
+            VideoStatus.uploading,
+            VideoStatus.uploaded,
+            VideoStatus.downloading,
+            VideoStatus.extracting_audio,
+            VideoStatus.transcribing,
+            VideoStatus.generating_notes,
+        ]
+        if video.status in processing_states:
             raise HTTPException(status_code=404, detail="Transcription not ready yet")
         raise HTTPException(status_code=404, detail="Transcription not found")
 
