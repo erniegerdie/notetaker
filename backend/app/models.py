@@ -8,11 +8,19 @@ from app.database import Base
 
 
 class VideoStatus(str, enum.Enum):
+    # Upload phase
     uploading = "uploading"  # Video is being compressed and uploaded to storage
-    uploaded = "uploaded"
-    processing = "processing"
-    completed = "completed"
-    failed = "failed"
+    uploaded = "uploaded"  # Upload complete, ready for processing
+
+    # Processing phases (granular pipeline tracking)
+    downloading = "downloading"  # Downloading from R2 (if applicable)
+    extracting_audio = "extracting_audio"  # ffmpeg audio extraction in progress
+    transcribing = "transcribing"  # Whisper API transcription in progress
+    generating_notes = "generating_notes"  # LLM note generation in progress
+
+    # Terminal states
+    completed = "completed"  # All processing complete
+    failed = "failed"  # Processing failed at any stage
 
 
 class HlsStatus(str, enum.Enum):
