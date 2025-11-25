@@ -54,9 +54,16 @@ class Settings(BaseSettings):
     worker_service_url: str = ""  # Cloud Run worker service URL
     cloud_tasks_service_account: str = ""  # Service account for Cloud Tasks OIDC auth
 
+    # CORS configuration
+    cors_origins: str = "http://localhost:3000,http://localhost:3001,http://localhost:3002"
+
     @property
     def allowed_formats_list(self) -> List[str]:
         return [fmt.strip() for fmt in self.allowed_video_formats.split(",")]
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",")]
 
     @property
     def max_file_size_bytes(self) -> int:

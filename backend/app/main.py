@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.api import videos, collections
 from app.database import engine, Base
+from app.config import settings
 
 
 # Configure loguru logging
@@ -46,13 +47,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Local development
-        "http://localhost:3001",  # Local development (alternate)
-        "http://localhost:3002",  # Local development
-        "*",  # Allow all origins (for development/testing)
-        # TODO: Restrict to specific Vercel domains in production
-    ],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
